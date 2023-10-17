@@ -1,26 +1,31 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import Header from './components/Header';
 import './App.css';
+import LoginModal from './components/LoginModal';
 
-function App() {
+const App: React.FC = () => {
+  const [color, setColor] = useState<string>('blue');
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const handleColorChange = (selectedColor: string) => {
+    setColor(selectedColor);
+    document.documentElement.style.setProperty(
+      '--primary-color',
+      selectedColor
+    );
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="App" style={{ backgroundColor: `var(--primary-color)` }}>
+      {isLoggedIn && (
+        <LoginModal
+          onClose={() => {}}
+          onLoginSuccess={() => {}}
+        />
+      )}
+      <Header onColorChange={handleColorChange} />
+      {/* Rest of your components */}
     </div>
   );
-}
+};
 
 export default App;
