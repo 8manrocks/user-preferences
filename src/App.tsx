@@ -1,29 +1,51 @@
-import React, { useState } from 'react';
-import Header from './components/Header';
-import './App.css';
-import LoginModal from './components/LoginModal';
+import React, { useEffect, useState } from "react";
+import Header from "./components/Header";
+import "./App.css";
+import LoginModal from "./components/LoginModal";
+import { Constants } from "./utils/constants";
+import API from "./utils/httpClient";
 
 const App: React.FC = () => {
-  const [color, setColor] = useState<string>('blue');
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const handleColorChange = (selectedColor: string) => {
-    setColor(selectedColor);
-    document.documentElement.style.setProperty(
-      '--primary-color',
-      selectedColor
-    );
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState("red");
+  useEffect(() => {
+    API.get(Constants.LOGGEDIN_ENDPOINT)
+      .then((r) => setIsLoggedIn(true))
+      .catch((e) => setIsLoggedIn(false));
+  }, []);
+  useEffect(() => {
+    if (isLoggedIn) {
+      API.get(Constants.PREFS_ENDPOINT)
+        .then(({ data }) => {
+          setPrimaryColor(data.primaryColor);
+        })
+        .catch((e) => alert(e));
+    }
+  }, [isLoggedIn]);
+  useEffect(() => {
+    document.documentElement.style.setProperty("--primary-color", primaryColor);
+  }, [primaryColor]);
+  const signout = async () => {
+    await API.get(Constants.LOGOUT_ENDPOINT);
+    setIsLoggedIn(false);
   };
-
+  const savePrefs = async () => {
+    try {
+      await API.put(Constants.PREFS_ENDPOINT, { primaryColor });
+    } catch (e: any) {
+      alert(e.error);
+    }
+  };
   return (
-    <div className="App" style={{ backgroundColor: `var(--primary-color)` }}>
+    <div className="App">
+      {!isLoggedIn && <LoginModal onLoginSuccess={() => setIsLoggedIn(true)} />}
+      <Header onColorChange={setPrimaryColor} />
       {isLoggedIn && (
-        <LoginModal
-          onClose={() => {}}
-          onLoginSuccess={() => {}}
-        />
+        <>
+          <button onClick={() => signout()}>Sign out</button>
+          <button onClick={() => savePrefs()}>Save Preferences</button>
+        </>
       )}
-      <Header onColorChange={handleColorChange} />
-      {/* Rest of your components */}
     </div>
   );
 };
